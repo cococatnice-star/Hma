@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Roblox Shop"
+description = "The web app from the requested Video-Clone-Website repository."
+version = "1.0.0"
+id = "artifacts/roblox-shop"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22881
+
+[services.development]
+run = "pnpm --filter @workspace/roblox-shop run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/roblox-shop", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/roblox-shop/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22881"
+BASE_PATH = "/"

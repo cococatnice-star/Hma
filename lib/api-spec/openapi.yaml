@@ -11,6 +11,211 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /script-loaders/{slug}:
+    get:
+      operationId: getNamedScriptLoader
+      summary: Get a public Lua bootstrap, not the protected script source
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string, pattern: "^[a-z0-9]{8}$" }
+      responses:
+        "200":
+          description: Lua bootstrap that POSTs its key for authorization
+          content:
+            text/plain:
+              schema: { type: string }
+        "404": { description: Script not found }
+  /script-executions:
+    post:
+      operationId: executeNamedScript
+      summary: Validate a redeemed script key and its device before delivering private Lua
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScriptExecutionInput"
+      responses:
+        "200":
+          description: Authorized Lua source
+          content:
+            text/plain:
+              schema: { type: string }
+        "400": { description: Invalid request }
+        "403": { description: "Invalid, unredeemed, or device-mismatched key" }
+        "404": { description: Script not found }
+        "429": { description: Too many requests }
+        "503": { description: Script storage unavailable }
+  /cocox-ip-share/consent:
+    get:
+      operationId: getIpShareConsent
+      summary: Prepare a short-lived confirmation token without looking up or sharing an IP
+      responses:
+        "200":
+          description: Confirmation token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpShareConsent"
+        "503":
+          description: Discord bot is unavailable
+  /cocox-ip-share:
+    post:
+      operationId: sendIpShare
+      summary: Share only the requesting visitor's public IP after explicit confirmation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IpShareInput"
+      responses:
+        "200":
+          description: Report delivered to the bot owner's private Discord messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpShareReport"
+        "400":
+          description: Missing consent or no usable public IP
+        "403":
+          description: Confirmation expired or request came from another website
+        "429":
+          description: Please wait before sending another report
+        "503":
+          description: Lookup or private delivery failed
+  /auth/user:
+    get:
+      operationId: getCurrentAuthUser
+      responses:
+        "200":
+          description: Current login state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserEnvelope"
+  /login:
+    get:
+      operationId: beginBrowserLogin
+      parameters:
+        - in: query
+          name: returnTo
+          schema: { type: string }
+      responses:
+        "302": { description: Redirect to login }
+  /callback:
+    get:
+      operationId: handleBrowserLoginCallback
+      responses:
+        "302": { description: Redirect after login }
+  /logout:
+    get:
+      operationId: logoutBrowserSession
+      responses:
+        "302": { description: Redirect after logout }
+  /mobile-auth/token-exchange:
+    post:
+      operationId: exchangeMobileAuthorizationCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MobileTokenExchangeRequest" }
+      responses:
+        "200":
+          description: Authenticated session
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MobileTokenExchangeSuccess" }
+  /mobile-auth/logout:
+    post:
+      operationId: logoutMobileSession
+      responses:
+        "200":
+          description: Session cleared
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LogoutSuccess" }
+  /cocox-installs:
+    post:
+      operationId: createCocoXInstall
+      summary: Request a protected upload URL for a signed IPA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CocoXInstallInput" }
+      responses:
+        "201":
+          description: Private upload allocated; installation not yet available
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CocoXUpload" }
+        "401": { description: Login required }
+        "429": { description: Daily upload quota exceeded }
+  /cocox-installs/{id}/complete:
+    post:
+      operationId: completeCocoXInstall
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Upload checked and expiring installation link ready
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CocoXInstallLink" }
+        "401": { description: Login required }
+        "404": { description: Upload unavailable or not owned by this user }
+        "422": { description: Upload size or package format invalid }
+  /cocox-installs/{id}:
+    delete:
+      operationId: deleteCocoXInstall
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Hosted copy removed }
+        "401": { description: Login required }
+  /cocox-installs/{id}/manifest.plist:
+    get:
+      operationId: getCocoXInstallManifest
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Expiring iOS installation manifest
+          content:
+            application/xml:
+              schema: { type: string }
+        "404": { description: Link expired or not ready }
+  /cocox-installs/{id}/app.ipa:
+    get:
+      operationId: downloadCocoXInstalledPackage
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Expiring signed IPA
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "206": { description: Partial IPA byte range }
+        "404": { description: Link expired or not ready }
+  /cocox-sign-profile:
+    get:
+      operationId: downloadCocoXSignProfile
+      summary: Download the removable CocoX Sign Home Screen shortcut
+      responses:
+        "200":
+          description: iOS configuration profile containing only a web clip
+          content:
+            application/x-apple-aspen-config:
+              schema:
+                type: string
+                format: binary
+        "503":
+          description: The shortcut profile is not available
   /healthz:
     get:
       operationId: healthCheck
@@ -24,8 +229,122 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /delta-install:
+    get:
+      operationId: getDeltaInstallCount
+      tags: [delta]
+      summary: Get Delta install count
+      description: Returns the number of recorded Delta install requests
+      responses:
+        "200":
+          description: Current install count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeltaInstallCount"
+    post:
+      operationId: recordDeltaInstall
+      tags: [delta]
+      summary: Record a Delta install request
+      description: Increments and returns the number of recorded Delta install requests
+      responses:
+        "200":
+          description: Updated install count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeltaInstallCount"
 components:
   schemas:
+    ScriptExecutionInput:
+      type: object
+      additionalProperties: false
+      required: [slug, key, hwid]
+      properties:
+        slug: { type: string, pattern: "^[a-z0-9]{8}$" }
+        key: { type: string, minLength: 23, maxLength: 64 }
+        hwid: { type: string, minLength: 1, maxLength: 256 }
+    IpShareConsent:
+      type: object
+      required: [nonce, expiresAt]
+      properties:
+        nonce: { type: string }
+        expiresAt: { type: string, format: date-time }
+    IpShareInput:
+      type: object
+      additionalProperties: false
+      required: [consent, nonce]
+      properties:
+        consent: { type: boolean, const: true }
+        nonce: { type: string, pattern: '^[0-9]{13}\.[0-9a-f]{64}\.[0-9a-f]{64}$' }
+    IpShareReport:
+      type: object
+      required: [ip, city, state, delivered]
+      properties:
+        ip: { type: string }
+        city: { type: [string, "null"] }
+        state: { type: [string, "null"] }
+        delivered: { type: boolean, const: true }
+    AuthUser:
+      type: object
+      required: [id, email, firstName, lastName, profileImageUrl]
+      properties:
+        id: { type: string }
+        email: { type: [string, "null"] }
+        firstName: { type: [string, "null"] }
+        lastName: { type: [string, "null"] }
+        profileImageUrl: { type: [string, "null"] }
+    AuthUserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user:
+          oneOf:
+            - { $ref: "#/components/schemas/AuthUser" }
+            - { type: "null" }
+    MobileTokenExchangeRequest:
+      type: object
+      required: [code, code_verifier, redirect_uri, state]
+      properties:
+        code: { type: string, minLength: 1 }
+        code_verifier: { type: string, minLength: 1 }
+        redirect_uri: { type: string, format: uri }
+        state: { type: string, minLength: 1 }
+        nonce: { type: string }
+    MobileTokenExchangeSuccess:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    LogoutSuccess:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean, const: true }
+    CocoXInstallInput:
+      type: object
+      additionalProperties: false
+      required: [name, size, bundleId, version, title]
+      properties:
+        name: { type: string, minLength: 5, maxLength: 150, pattern: '\.ipa$' }
+        size: { type: integer, minimum: 4, maximum: 524288000 }
+        bundleId: { type: string, minLength: 3, maxLength: 255, pattern: '^[A-Za-z0-9][A-Za-z0-9.-]+$' }
+        version: { type: string, minLength: 1, maxLength: 60, pattern: '^[0-9]+(\.[0-9]+)*$' }
+        title: { type: string, minLength: 1, maxLength: 150 }
+    CocoXUpload:
+      type: object
+      required: [id, uploadUrl, expiresAt]
+      properties:
+        id: { type: string }
+        uploadUrl: { type: string, format: uri }
+        expiresAt: { type: string, format: date-time }
+    CocoXInstallLink:
+      type: object
+      required: [id, installUrl, expiresAt]
+      properties:
+        id: { type: string }
+        installUrl: { type: string }
+        expiresAt: { type: string, format: date-time }
     HealthStatus:
       type: object
       properties:
@@ -33,4 +352,12 @@ components:
           type: string
       required:
         - status
+    DeltaInstallCount:
+      type: object
+      properties:
+        count:
+          type: integer
+          minimum: 0
+      required:
+        - count
 

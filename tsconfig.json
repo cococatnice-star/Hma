@@ -11,6 +11,12 @@
     },
     {
       "path": "./lib/api-zod"
+    },
+    {
+      "path": "./lib/store-catalog"
+    },
+    {
+      "path": "./lib/replit-auth-web"
     }
   ]
 }

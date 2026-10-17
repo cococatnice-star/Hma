@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "postgresql-16", "python-base-3.13"]
 
 [deployment]
 router = "application"
@@ -11,6 +11,41 @@ env = { "CI" = "true" }
 [workflows]
 runButton = "Project"
 
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "cocox-signer"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "cocox-typecheck"
+
+[[workflows.workflow]]
+name = "cocox-signer"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/roblox-shop run test:signer"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "cocox-typecheck"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/roblox-shop run typecheck"
+
+[workflows.workflow.metadata]
+isValidation = true
+
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
@@ -18,3 +53,16 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[nix]
+channel = "stable-25_05"
+packages = ["freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "libyaml", "openjpeg", "tcl", "tk", "zlib"]
+
+[userenv]
+
+[userenv.shared]
+VITE_DISCORD_INVITE_URL = "https://discord.gg/KE93Kh3sVz"
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
