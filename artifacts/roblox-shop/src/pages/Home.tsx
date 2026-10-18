@@ -27,6 +27,9 @@ export default function Home() {
   const featuredProducts = products.slice(0, 6);
   const { toast } = useToast();
   const [showLauncher, setShowLauncher] = useState(true);
+  const deltaInstallCountBaseline = 39_932;
+  const [optimisticDeltaInstallCount, setOptimisticDeltaInstallCount] =
+    useState<number | null>(null);
   const [shortcutRequested, setShortcutRequested] = useState(false);
   const [showColorPredictor, setShowColorPredictor] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(true);
@@ -46,6 +49,13 @@ export default function Home() {
   });
 
   const handleDeltaInstall = () => {
+    setOptimisticDeltaInstallCount((current) =>
+      Math.max(
+        current ?? deltaInstallCountBaseline,
+        deltaInstallData?.count ?? deltaInstallCountBaseline,
+      ) + 1,
+    );
+
     const recorded = navigator.sendBeacon("/api/delta-install");
 
     if (!recorded) {
@@ -453,7 +463,10 @@ export default function Home() {
             [ DELTA INSTALLATION PROTOCOL ]
           </div>
           <div className="mt-5 font-display text-sm font-bold uppercase tracking-[0.2em] text-primary">
-            [ {deltaInstallData?.count ?? 0} PEOPLE PRESSED YES ]
+            [ {Math.max(
+              deltaInstallData?.count ?? deltaInstallCountBaseline,
+              optimisticDeltaInstallCount ?? deltaInstallCountBaseline,
+            )} PEOPLE PRESSED YES ]
           </div>
           <h1 className="mt-4 font-display text-3xl font-black uppercase tracking-tight text-white sm:text-5xl">
             Do You WAnt to Install Delta
