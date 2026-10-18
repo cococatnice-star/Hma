@@ -9,3 +9,5 @@
 - [CMS profile inspection](cms-profile-inspection.md) — PKCS7 helpers can report empty content for valid embedded CMS payloads; test real CMS-wrapped plists.
 - [Script licensing policy](script-licensing-policy.md) — first redeemer owns each key; keep bot actions production-bound and preserve encryption-secret continuity.
 - [Cloudflare blocked-page scope](cloudflare-homepage-scope.md) — Meow Cheatz loads at cocox.wtf; unknown browser paths show CocoX Security, without breaking app routes or installers.
+- [Requested repository scope](requested-repository-scope.md) — reproduce the repository without extra artifacts, and omit `esign-mobile`.
+- [Workspace install constraints](workspace-install-constraints.md) — the Replit package firewall blocks an old transitive release; keep the compatible patch and pnpm build permissions.
