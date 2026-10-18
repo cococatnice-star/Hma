@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 const source = await readFile(new URL("../../../generated-artifacts/cocoxoxoxox.js", import.meta.url), "utf8");
 const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+const websiteOrigin = "https://hmfndndend-without-esign-mobile--cocoxwtfauth.replit.app";
 test("unknown browser paths are blocked, while real Meow Cheatz pages stay usable", async () => {
   for (const pathname of ["/234j", "/234j/", "/random/nested/path", "/a2jb2c3d"]) {
   for (const headers of [{ accept: "text/html" }, { "sec-fetch-dest": "document" }]) {
@@ -47,8 +48,18 @@ test("unknown browser paths are blocked, while real Meow Cheatz pages stay usabl
         const page = await worker.fetch(new Request(`https://cocox.wtf${pathname}`, { headers }));
         assert.equal(page.status, 200);
         assert.match(await page.text(), /<title>Meow Cheatz<\/title>/);
-        assert.equal(pageRequests.at(-1), `https://coco-x-meow-cheatz--cococatnice.replit.app${pathname}`);
+        assert.equal(pageRequests.at(-1), `${websiteOrigin}${pathname}`);
       }
+    }
+    for (const [pathname, destination] of [
+      ["/assets/index-DQlbesac.js", "script"],
+      ["/assets/index-D1gQR3vw.css", "style"],
+    ]) {
+      const asset = await worker.fetch(new Request(`https://cocox.wtf${pathname}`, {
+        headers: { "sec-fetch-dest": destination },
+      }));
+      assert.equal(asset.status, 200);
+      assert.equal(pageRequests.at(-1), `${websiteOrigin}${pathname}`);
     }
     const other = await worker.fetch(new Request("https://www.cocox.wtf/", {
       headers: { accept: "text/html", "sec-fetch-dest": "document" },
@@ -76,17 +87,17 @@ test("edited Worker retains manifests and legacy Lua, and forwards named GET/POS
   };
   try {
     const bootstrap = await worker.fetch(new Request("https://cocox.wtf/a2jb2c3d"));
-    assert.equal(forwarded.at(-1).url, "https://coco-x-meow-cheatz--cococatnice.replit.app/api/script-loaders/a2jb2c3d");
+    assert.equal(forwarded.at(-1).url, `${websiteOrigin}/api/script-loaders/a2jb2c3d`);
     assert.equal(bootstrap.headers.get("cache-control"), "no-store");
     const body = JSON.stringify({ slug: "a2jb2c3d", key: "synthetic-test-value", hwid: "synthetic-device" });
     const execution = await worker.fetch(new Request("https://cocox.wtf/api/script-executions", {
       method: "POST", headers: { "Content-Type": "application/json" }, body,
     }));
-    assert.equal(forwarded.at(-1).url, "https://coco-x-meow-cheatz--cococatnice.replit.app/api/script-executions");
+    assert.equal(forwarded.at(-1).url, `${websiteOrigin}/api/script-executions`);
     assert.equal(forwarded.at(-1).body, body);
     assert.equal(execution.headers.get("cache-control"), "no-store");
     await worker.fetch(new Request("https://cocox.wtf/products"));
-    assert.equal(forwarded.at(-1).url, "https://coco-x-meow-cheatz--cococatnice.replit.app/products");
+    assert.equal(forwarded.at(-1).url, `${websiteOrigin}/products`);
     await worker.fetch(new Request("https://wsp.cocox.wtf/a2jb2c3d"));
     assert.equal(new URL(forwarded.at(-1).url).hostname, "broomg-faithful-git-hub-copy--mynorguerra939.replit.app");
   } finally { globalThis.fetch = realFetch; }

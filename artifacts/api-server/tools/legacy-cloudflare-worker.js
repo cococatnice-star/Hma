@@ -108,7 +108,7 @@ const MANIFEST = `<?xml version="1.0" encoding="UTF-8"?>
 
 
 
-const WEBSITE_ORIGIN = "https://coco-x-meow-cheatz--cococatnice.replit.app";
+const WEBSITE_ORIGIN = "https://hmfndndend-without-esign-mobile--cocoxwtfauth.replit.app";
 
 export default {
   async fetch(request) {

@@ -2,7 +2,7 @@
 import legacy from "./legacy-cloudflare-worker.js";
 import { blockedHomePage } from "./cocox-blocked-page";
 
-const WEBSITE_ORIGIN = "https://coco-x-meow-cheatz--cococatnice.replit.app";
+const WEBSITE_ORIGIN = "https://hmfndndend-without-esign-mobile--cocoxwtfauth.replit.app";
 
 export default {
   async fetch(request: Request) {
